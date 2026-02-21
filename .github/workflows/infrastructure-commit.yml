@@ -1,0 +1,36 @@
+name: Infrastructure Synth
+
+on:
+push:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-commit.yml'
+    
+    pull_request:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-commit.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  synth-and-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: infrastructure/package-lock.json
+
+      - name: Install (infrastructure)
+        working-directory: infrastructure
+        run: npm ci
+
+      - name: CDK Synth
+        working-directory: infrastructure
+        run: npx cdk synth
