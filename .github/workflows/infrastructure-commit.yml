@@ -1,22 +1,22 @@
 name: Infrastructure Synth
 
 on:
-    push:
-        paths:
-          - 'infrastructure/**'
-          - '.github/workflows/infrastructure-commit.yml'
-        
-    pull_request:
-        paths:
-          - 'infrastructure/**'
-          - '.github/workflows/infrastructure-commit.yml'
+  push:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-commit.yml'
+
+  pull_request:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-commit.yml'
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  synth-and-diff:
+  synth:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
