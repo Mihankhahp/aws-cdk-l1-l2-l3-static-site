@@ -4,6 +4,7 @@
   "bin": {
     "infrastructure": "bin/infrastructure.js"
   },
+  "type": "module",
   "scripts": {
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
