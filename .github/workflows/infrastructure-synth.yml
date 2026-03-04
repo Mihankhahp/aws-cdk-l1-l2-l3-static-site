@@ -1,14 +1,9 @@
 name: Infrastructure Synth
 
 on:
-  pull_request:
-    paths:
-      - 'infrastructure/**'
-      - '.github/workflows/infrastructure-commit.yml'
-  push:
-    paths:
-      - 'infrastructure/**'
-      - '.github/workflows/infrastructure-commit.yml'
+  paths:
+    - 'infrastructure/**'
+    - '.github/workflows/infrastructure-synth.yml'
 
 permissions:
   id-token: write
