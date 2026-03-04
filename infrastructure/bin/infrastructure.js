@@ -1,6 +1,8 @@
 // bin/infrastructure.js
 import * as cdk from 'aws-cdk-lib';
-import { StaticWebsiteStack } from '../lib/static-website-stack.js';
+import { StaticWebsiteStackL1 } from '../lib/static-website-stack-L1.js';
+import { StaticWebsiteStackL2 } from '../lib/static-website-stack-L2.js';
+import { StaticWebsiteStackL3 } from '../lib/static-website-stack-L3.js';
 
 const app = new cdk.App();
 
@@ -13,15 +15,39 @@ const retainRaw =
   app.node.tryGetContext('retainPreviousVersion') ??
   process.env.RETAIN_PREVIOUS_VERSION ??
   'false';
-
 const retainPreviousVersion = String(retainRaw).toLowerCase() === 'true';
 
-new StaticWebsiteStack(app, `static-website-${stage}`, {
+// Which layer to deploy: l1 | l2 | l3
+const layerRaw =
+  app.node.tryGetContext('layer') ?? process.env.CDK_LAYER ?? 'l3';
+const layer = String(layerRaw).toLowerCase();
+
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
+};
+
+const commonProps = {
   stage,
   version,
   retainPreviousVersion,
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
-});
+  env,
+};
+
+const stackId = `static-website-${stage}`;
+
+switch (layer) {
+  case 'l1':
+    new StaticWebsiteStackL1(app, stackId, commonProps);
+    break;
+  case 'l2':
+    new StaticWebsiteStackL2(app, stackId, commonProps);
+    break;
+  case 'l3':
+    new StaticWebsiteStackL3(app, stackId, commonProps);
+    break;
+  default:
+    throw new Error(
+      `Unknown layer "${layer}". Use l1, l2, or l3 (context: -c layer=l2 or env: CDK_LAYER=l2).`,
+    );
+}

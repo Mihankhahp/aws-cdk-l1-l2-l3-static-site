@@ -23,7 +23,10 @@ const safeBucketName = (name) =>
  * --------- "Constructs" (same file, separated concerns) ----------
  */
 
-class WebsiteBucket extends Construct {
+/**
+ * L1 (Cfn*) Website Bucket + Bucket Policy (TLS-only + CloudFront OAC read)
+ */
+export class WebsiteBucket extends Construct {
   /**
    * @param {Construct} scope
    * @param {string} id
@@ -37,35 +40,95 @@ class WebsiteBucket extends Construct {
 
     const { bucketName, removalPolicy } = props;
 
-    this.bucket = new s3.Bucket(this, 'Bucket', {
+    // ---------
+    // L1 Bucket
+    // ---------
+    this.bucket = new s3.CfnBucket(this, 'Bucket', {
       bucketName,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      enforceSSL: true,
-      versioned: true,
-      removalPolicy,
-      autoDeleteObjects: removalPolicy === RemovalPolicy.DESTROY,
+
+      // Block all public access (L1 equivalent of BlockPublicAccess.BLOCK_ALL)
+      publicAccessBlockConfiguration: {
+        blockPublicAcls: true,
+        blockPublicPolicy: true,
+        ignorePublicAcls: true,
+        restrictPublicBuckets: true,
+      },
+
+      // S3 managed encryption (L1 equivalent of BucketEncryption.S3_MANAGED)
+      bucketEncryption: {
+        serverSideEncryptionConfiguration: [
+          {
+            serverSideEncryptionByDefault: {
+              sseAlgorithm: 'AES256',
+            },
+          },
+        ],
+      },
+
+      // Versioning enabled
+      versioningConfiguration: { status: 'Enabled' },
+    });
+
+    // Removal policy must be applied explicitly for L1 too
+    this.bucket.applyRemovalPolicy(removalPolicy);
+
+    // --------------------
+    // L1 Bucket Policy base
+    // - Enforce TLS (equivalent of enforceSSL: true)
+    // - We'll optionally add CloudFront OAC read later
+    // --------------------
+    this._policyStatements = [
+      {
+        Sid: 'EnforceTLS',
+        Effect: 'Deny',
+        Principal: '*',
+        Action: 's3:*',
+        Resource: [
+          `arn:aws:s3:::${bucketName}`,
+          `arn:aws:s3:::${bucketName}/*`,
+        ],
+        Condition: {
+          Bool: { 'aws:SecureTransport': 'false' },
+        },
+      },
+    ];
+
+    this.bucketPolicy = new s3.CfnBucketPolicy(this, 'BucketPolicy', {
+      bucket: this.bucket.ref,
+      policyDocument: {
+        Version: '2012-10-17',
+        Statement: this._policyStatements,
+      },
     });
   }
 
   /**
    * Allow CloudFront distribution to read objects via OAC.
+   * NOTE: With L1, we "edit" the BucketPolicy's policyDocument and add a statement.
+   *
    * @param {string} distributionId
    */
   allowCloudFrontRead(distributionId) {
-    this.bucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'AllowCloudFrontReadViaOAC',
-        actions: ['s3:GetObject'],
-        resources: [this.bucket.arnForObjects('*')],
-        principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
-        conditions: {
-          StringEquals: {
-            'AWS:SourceArn': `arn:aws:cloudfront::${this.bucket.stack.account}:distribution/${distributionId}`,
-          },
+    const account = Stack.of(this).account;
+
+    this._policyStatements.push({
+      Sid: 'AllowCloudFrontReadViaOAC',
+      Effect: 'Allow',
+      Principal: { Service: 'cloudfront.amazonaws.com' },
+      Action: 's3:GetObject',
+      Resource: [`arn:aws:s3:::${this.bucket.bucketName}/*`],
+      Condition: {
+        StringEquals: {
+          'AWS:SourceArn': `arn:aws:cloudfront::${account}:distribution/${distributionId}`,
         },
-      }),
-    );
+      },
+    });
+
+    // Re-assign policyDocument so CDK notices the change
+    this.bucketPolicy.policyDocument = {
+      Version: '2012-10-17',
+      Statement: this._policyStatements,
+    };
   }
 }
 
@@ -173,7 +236,7 @@ class WebsiteDistribution extends Construct {
  *   version: app version string
  *   retainPreviousVersion: boolean
  */
-export class StaticWebsiteStack extends Stack {
+export class StaticWebsiteStackL1 extends Stack {
   /**
    * @param {Construct} scope
    * @param {string} id
