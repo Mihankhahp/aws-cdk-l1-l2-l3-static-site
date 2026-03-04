@@ -28,4 +28,4 @@ jobs:
 
       - name: CDK Synth
         working-directory: infrastructure
-        run: npx cdk synth
+        run: npx -y aws-cdk@latest synth
