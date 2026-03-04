@@ -1,6 +1,10 @@
 name: Infrastructure Synth
 
 on:
+  pull_request:
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-commit.yml'
   push:
     paths:
       - 'infrastructure/**'
