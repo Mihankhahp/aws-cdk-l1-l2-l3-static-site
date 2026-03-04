@@ -1,9 +1,10 @@
 name: Infrastructure Synth
 
 on:
-  paths:
-    - 'infrastructure/**'
-    - '.github/workflows/infrastructure-synth.yml'
+  push: 
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-synth.yml'
 
 permissions:
   id-token: write
