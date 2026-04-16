@@ -51,30 +51,10 @@ export class StaticWebsiteStackL2 extends Stack {
     super(scope, id, props);
 
     // Prefer explicit props, then context, then env vars, then defaults
-    const stage =
-      props.stage ??
-      this.node.tryGetContext('stage') ??
-      process.env.STAGE ??
-      'dev';
-
-    const version =
-      props.version ??
-      this.node.tryGetContext('version') ??
-      process.env.VERSION ??
-      '0.0.0';
-
-    const retainPreviousVersion =
-      props.retainPreviousVersion ??
-      toBool(
-        this.node.tryGetContext('retainPreviousVersion') ??
-          process.env.RETAIN_PREVIOUS_VERSION,
-        false,
-      );
-
-    const bucketBaseName =
-      props.bucketBaseName ??
-      this.node.tryGetContext('bucketBaseName') ??
-      process.env.BUCKET_BASE_NAME;
+    const stage = props.stage ?? 'dev';
+    const version = props.version ?? '0.0.0';
+    const retainPreviousVersion = props.retainPreviousVersion ?? false;
+    const bucketBaseName = props.bucketBaseName;
 
     // CDK sources of truth (resolved from stack env / credentials)
     const account = Stack.of(this).account;

@@ -26,11 +26,14 @@ const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION,
 };
+const bucketBaseName =
+  app.node.tryGetContext('bucketBaseName') ?? process.env.BUCKET_BASE_NAME;
 
 const commonProps = {
   stage,
   version,
   retainPreviousVersion,
+  bucketBaseName,
   env,
 };
 

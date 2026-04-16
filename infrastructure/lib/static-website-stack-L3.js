@@ -38,25 +38,9 @@ export class StaticWebsiteStackL3 extends Stack {
   constructor(scope, id, props = {}) {
     super(scope, id, props);
 
-    const stage =
-      props.stage ??
-      this.node.tryGetContext('stage') ??
-      process.env.STAGE ??
-      'dev';
-
-    const version =
-      props.version ??
-      this.node.tryGetContext('version') ??
-      process.env.VERSION ??
-      '0.0.0';
-
-    const retainPreviousVersion =
-      props.retainPreviousVersion ??
-      toBool(
-        this.node.tryGetContext('retainPreviousVersion') ??
-          process.env.RETAIN_PREVIOUS_VERSION,
-        false,
-      );
+    const stage = props.stage ?? 'dev';
+    const version = props.version ?? '0.0.0';
+    const retainPreviousVersion = props.retainPreviousVersion ?? false;
 
     const removalPolicy = retainPreviousVersion
       ? RemovalPolicy.RETAIN
