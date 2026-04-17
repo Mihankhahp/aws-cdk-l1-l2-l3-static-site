@@ -1,4 +1,5 @@
-# cdk-static-site-layers
+<img width="1500" height="750" alt="medium_story_banner_1500x750" src="https://github.com/user-attachments/assets/edde05bf-1f06-4e01-9aa2-7cf15febb8b2" />
+
 
 Build and compare the same static website architecture across **AWS CDK L1, L2, and L3 constructs**.
 
